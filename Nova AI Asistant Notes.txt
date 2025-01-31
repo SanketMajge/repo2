@@ -1,0 +1,196 @@
+**### Nova AI Assistant - Project Documentation**
+
+## **📌 Project Overview**
+
+Nova AI is a **Python-based voice assistant** that can:
+
+- Recognize voice commands
+- Fetch news headlines
+- Get weather updates
+- Search for information on Google
+- Play YouTube videos
+- Tell jokes and fun facts
+
+This project integrates **speech recognition, text-to-speech (TTS), Selenium for web automation, and API requests** to enhance its capabilities.
+
+---
+
+## **🔗 Dependencies & Installation**
+
+Ensure these libraries are installed before running the project:
+
+```bash
+pip install pyttsx3 SpeechRecognition selenium webdriver-manager requests
+```
+
+---
+
+## **📝 Full Source Code**
+
+```python
+import pyttsx3 as p
+import speech_recognition as sr
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+import requests
+import random
+
+# Function to fetch news headlines
+def get_news():
+    API_KEY = "your_newsapi_key"
+    url = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={API_KEY}"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        articles = response.json().get("articles", [])
+        return [f"Headline {i + 1}: {article['title']}" for i, article in enumerate(articles[:5])]
+    else:
+        return ["Error: Unable to fetch news"]
+
+# Function to fetch current weather
+def temp(city="New York"):
+    API_KEY = "your_openweather_api_key"
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        temperature = data["main"]["temp"]
+        description = data["weather"][0]["description"]
+        return f"The current temperature in {city} is {temperature}°C with {description}."
+    else:
+        return "Sorry, I couldn't fetch the weather details."
+
+# Class to search for information on Google
+class InfoW:
+    def __init__(self):
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+    def get_inf(self, topic):
+        self.driver.get("https://www.google.com")
+        search_box = self.driver.find_element(By.NAME, "q")
+        search_box.send_keys(topic)
+        search_box.submit()
+        print(f"Search results for '{topic}' are displayed in your browser.")
+
+# Class to play YouTube videos
+class Music:
+    def __init__(self):
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+    def play(self, query):
+        self.driver.get("https://www.youtube.com")
+        search_box = self.driver.find_element(By.NAME, "search_query")
+        search_box.send_keys(query)
+        search_box.submit()
+        self.driver.implicitly_wait(5)
+        video = self.driver.find_element(By.XPATH, '//a[@id="video-title"]')
+        video.click()
+        print(f"Playing '{query}' on YouTube.")
+
+# Text-to-speech setup
+engine = p.init()
+engine.setProperty('rate', 150)
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)
+
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
+
+# Speech recognition
+def recognize_speech():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        r.energy_threshold = 10000
+        r.adjust_for_ambient_noise(source, duration=1.2)
+        print("Listening...")
+        audio = r.listen(source)
+    try:
+        return r.recognize_google(audio).lower()
+    except:
+        return ""
+
+# Main assistant loop
+def main():
+    speak("Hello, I am Nova. How can I assist you?")
+    while True:
+        command = recognize_speech()
+        print(f"You said: {command}")
+
+        if "exit" in command:
+            speak("Goodbye! Have a great day!")
+            break
+
+        elif "news" in command:
+            headlines = get_news()
+            for headline in headlines:
+                speak(headline)
+                print(headline)
+
+        elif "weather" in command:
+            speak("Which city's weather would you like to check?")
+            city = recognize_speech()
+            speak(temp(city))
+
+        elif "information" in command:
+            speak("What topic do you want information about?")
+            topic = recognize_speech()
+            assist = InfoW()
+            assist.get_inf(topic)
+
+        elif "play video" in command:
+            speak("Which video should I play?")
+            video = recognize_speech()
+            assist = Music()
+            assist.play(video)
+
+        else:
+            speak("I didn't understand that. Please try again.")
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## **🔎 How Nova Works**
+
+1. **Speech Recognition:** Captures user input via microphone.
+2. **Command Processing:** Checks user input and triggers functions.
+3. **News API & Weather API:** Fetches news and weather details.
+4. **Google Search & YouTube Automation:** Uses Selenium for browsing.
+5. **Text-to-Speech (TTS):** Responds with spoken output.
+
+---
+
+## **🗣️ User Questions Nova Can Handle**
+
+| **User Says**                          | **Nova's Response**                      |
+| -------------------------------------- | ---------------------------------------- |
+| "Tell me the news"                     | Fetches and reads top headlines          |
+| "What's the weather in [city]?"        | Reads the city's temperature & condition |
+| "Search for information about [topic]" | Opens Google and searches the topic      |
+| "Play [video name] on YouTube"         | Searches and plays the video             |
+| "Tell me a joke"                       | Speaks a random joke                     |
+| "Tell me a fun fact"                   | Speaks an interesting fact               |
+| "Exit" / "Stop"                        | Exits the program                        |
+
+---
+
+## **✅ Summary**
+
+This project builds a **smart voice assistant** with features like: ✔️ **Speech Recognition** (User input) ✔️ **API Integration** (News & Weather updates) ✔️ **Web Automation** (Google search & YouTube playback) ✔️ **Text-to-Speech** (AI voice responses)
+
+🔹 **Future Enhancements:**
+
+- Adding AI chatbot functionality
+- Email & reminder system
+- System control (open apps, shut down, etc.)
+
+---
+
+💡 *Would you like additional features added?* 🚀
+
